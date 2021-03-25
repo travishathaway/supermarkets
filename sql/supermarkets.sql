@@ -37,4 +37,4 @@ SELECT name, count(*) FROM supermarkets, boundary WHERE ST_Within(
   boundary.geom
 )
 GROUP BY supermarkets.name
-ORDER BY count(*) DESC
+ORDER BY count(*) DESC;

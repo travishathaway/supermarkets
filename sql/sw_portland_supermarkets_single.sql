@@ -1,0 +1,17 @@
+SET standard_conforming_strings = OFF;
+CREATE SCHEMA "public";
+DROP TABLE IF EXISTS "public"."sw_portland_supermarkets_single" CASCADE;
+DELETE FROM geometry_columns WHERE f_table_name = 'sw_portland_supermarkets_single' AND f_table_schema = 'public';
+BEGIN;
+CREATE TABLE "public"."sw_portland_supermarkets_single" ( "ogc_fid" SERIAL, CONSTRAINT "sw_portland_supermarkets_single_pk" PRIMARY KEY ("ogc_fid") );
+SELECT AddGeometryColumn('public','sw_portland_supermarkets_single','wkb_geometry',3857,'POINT',2);
+CREATE INDEX "sw_portland_supermarkets_single_wkb_geometry_geom_idx" ON "public"."sw_portland_supermarkets_single" USING GIST ("wkb_geometry");
+ALTER TABLE "public"."sw_portland_supermarkets_single" ADD COLUMN "osm_id" NUMERIC(20,0);
+ALTER TABLE "public"."sw_portland_supermarkets_single" ADD COLUMN "addr:housename" VARCHAR;
+ALTER TABLE "public"."sw_portland_supermarkets_single" ADD COLUMN "addr:housenumber" VARCHAR;
+ALTER TABLE "public"."sw_portland_supermarkets_single" ADD COLUMN "brand" VARCHAR;
+ALTER TABLE "public"."sw_portland_supermarkets_single" ADD COLUMN "name" VARCHAR;
+ALTER TABLE "public"."sw_portland_supermarkets_single" ADD COLUMN "operator" VARCHAR;
+ALTER TABLE "public"."sw_portland_supermarkets_single" ADD COLUMN "ref" VARCHAR;
+INSERT INTO "public"."sw_portland_supermarkets_single" ("wkb_geometry" , "osm_id", "addr:housename", "addr:housenumber", "brand", "name", "operator", "ref") VALUES ('0101000020110F0000D6D4DECDF0086AC1456C2B1EC1B65541', 146701427, NULL, '4320', 'Safeway', 'Safeway', NULL, '2690');
+COMMIT;
