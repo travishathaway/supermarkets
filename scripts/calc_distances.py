@@ -8,7 +8,6 @@ from SO:
     - https://stackoverflow.com/questions/1624883/alternative-way-to-split-a-list-into-groups-of-n
 """
 import sys
-from pprint import pprint
 import json
 from functools import wraps
 from typing import List, Tuple
@@ -35,17 +34,17 @@ def psycopg2_cur(conn_info):
     def wrap(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
+            # Setup postgres connection
+            connection = psycopg2.connect(**conn_info)
+            cursor = connection.cursor()
             try:
-                # Setup postgres connection
-                connection = psycopg2.connect(**conn_info)
-                cursor = connection.cursor()
                 # Call function passing in cursor
                 return_val = f(cursor, connection, *args, **kwargs)
             finally:
                 # Close connection
                 connection.commit()
                 connection.close()
-            
+
             return return_val
         return wrapper
     return wrap
@@ -84,26 +83,12 @@ def get_poi_groups(cursor) -> defaultdict:
     return poi_groups
 
 
-def get_matrix_request(
-        poi: Tuple[float, float],
-        batch: List[Tuple[int, float, float, float]],
-        costing: str = 'auto'
-) -> dict:
+def get_matrix_request(poi: Tuple, batch: List[Tuple], costing: str = 'auto') -> dict:
     """
     This returns the JSON serializable object that we pass to the matrix API.
-
-    Example:
-    {"sources": [
-        {"lat":40.744014,"lon":-73.990508},
-        {"lat":40.739735,"lon":-73.979713},
-        {"lat":40.752522,"lon":-73.985015},
-        {"lat":40.750117,"lon":-73.983704},
-        {"lat":40.750552,"lon":-73.993519}
-    ],
-    "targets": [
-        {"lat":40.750552,"lon":-73.993519}
-    ],
-    "costing":"pedestrian"}
+    
+    More information about the API request and response here:
+        - https://valhalla.readthedocs.io/en/latest/api/matrix/api-reference/
     """
     sources = [{'lat': x[2], 'lon': x[3]} for x in batch if x]
     targets = [{'lat': poi[0], 'lon': poi[1]}]
@@ -151,9 +136,9 @@ MATRIX_ENDPOINT = 'http://localhost:8002/sources_to_targets'
 @psycopg2_cur(PSQL_CONN)
 def main_batch(cursor, conn):
     """
-    This is the function that processes the distances between points
-    in batches. It runs faster but does not return the any information
-    about the route except for distance and time.
+    This function processes the distances between points in batches.
+    It runs faster but does not return any information about the
+    route except for distance and time.
     """
     cursor.execute(READ_SQL)
     poi_groups = get_poi_groups(cursor)
@@ -178,9 +163,9 @@ def main_batch(cursor, conn):
 @psycopg2_cur(PSQL_CONN)
 def main(cursor, connection):
     """
-    This is a function that is used for retrieving individual routes.
-    It takes longer to process but has the added benefit of returning
-    a route along with the response.
+    This function is used for retrieving individual routes. It takes longer
+    to process but has the added benefit of returning a route along with
+    the response.
     """
     cursor.execute(READ_SQL)
 
